@@ -1,0 +1,832 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diligence Training Simulator</title>
+<style>
+:root{
+  --navy:#1b2a44; --navy-2:#2c3e5f; --ink:#1f2328; --muted:#616671; --paper:#fbfaf6; --card:#ffffff;
+  --line:#dcd6c8; --line-2:#ebe6da; --gold:#9c7a2c; --gold-bg:#f6efdc;
+  --ok:#24704a; --ok-bg:#e5f3ea; --bad:#a8291f; --bad-bg:#f9e6e3; --warn:#8a5a00; --warn-bg:#fbf0d9;
+  --serif: Georgia, "Times New Roman", serif; --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5}
+.fiction{background:var(--gold-bg);border-bottom:1px solid var(--line);color:#5b4614;font-size:13px;padding:7px 16px;text-align:center}
+header.top{background:var(--navy);color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{font-family:var(--serif);font-size:20px;letter-spacing:.3px}
+.brand small{display:block;font-family:var(--sans);font-size:12px;color:#c9d2e3;letter-spacing:.6px;text-transform:uppercase}
+.btn{font:inherit;font-size:14px;border:1px solid var(--navy);background:var(--navy);color:#fff;padding:8px 16px;border-radius:4px;cursor:pointer}
+.btn:hover{background:var(--navy-2)}
+.btn.ghost{background:transparent;color:var(--navy)}
+.btn.ghost:hover{background:#eef1f6}
+.btn.light{background:transparent;border-color:#8796b3;color:#fff;font-size:13px;padding:6px 12px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.progress{max-width:1180px;margin:20px auto 0;padding:0 16px}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.step{border:0;background:none;padding:0;text-align:left;font:inherit;cursor:pointer;color:var(--muted)}
+.step:disabled{cursor:default}
+.step .bar{height:6px;border-radius:3px;background:var(--line-2);margin-bottom:6px}
+.step.done .bar{background:var(--gold)}
+.step.active .bar{background:var(--navy)}
+.step.active{color:var(--navy);font-weight:600}
+.step .n{font-size:12px;text-transform:uppercase;letter-spacing:.6px}
+.step .t{font-size:14px}
+main{max-width:1180px;margin:0 auto;padding:20px 16px 60px}
+.paper{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:36px 44px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.paper h1,.paper h2,.paper h3{font-family:var(--serif);color:var(--navy);font-weight:normal}
+.paper h1{font-size:26px;margin:0 0 4px}
+.paper h2{font-size:19px;margin:26px 0 8px;border-bottom:1px solid var(--line-2);padding-bottom:4px}
+.paper h3{font-size:16px;margin:18px 0 6px}
+.paper p,.paper li{font-family:var(--serif);font-size:15.5px;line-height:1.65}
+.memohead{display:grid;grid-template-columns:90px 1fr;gap:2px 10px;font-size:14px;border-top:2px solid var(--navy);border-bottom:1px solid var(--line);padding:12px 0;margin:14px 0 18px}
+.memohead b{color:var(--muted);font-weight:600;text-transform:uppercase;font-size:12px;letter-spacing:.6px;padding-top:2px}
+.legend{font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--gold);font-weight:600}
+.callout{border-left:3px solid var(--gold);background:var(--gold-bg);padding:12px 16px;margin:16px 0;font-size:14px}
+.callout p{margin:4px 0;font-size:14.5px}
+.nav{display:flex;justify-content:space-between;align-items:center;margin-top:24px;gap:12px;flex-wrap:wrap}
+dl.glossary{display:grid;grid-template-columns:190px 1fr;gap:6px 14px;font-size:14px;margin:8px 0}
+dl.glossary dt{font-weight:600;color:var(--navy)}
+dl.glossary dd{margin:0}
+.reqcat{margin-top:18px}
+.reqcat h3{margin-bottom:4px}
+.req{display:grid;grid-template-columns:44px 1fr;gap:8px;padding:6px 0;border-bottom:1px dotted var(--line);font-size:14.5px}
+.req .num{color:var(--muted);font-variant-numeric:tabular-nums}
+.tag{display:inline-block;font-size:12px;font-family:var(--sans);background:#eef1f6;color:var(--navy);border:1px solid #d3dae6;border-radius:3px;padding:1px 7px;margin:3px 6px 0 0}
+.parties{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin:12px 0}
+.party{border:1px solid var(--line);border-radius:4px;padding:10px 12px;font-size:14px}
+.party b{display:block;color:var(--navy)}
+.party span{color:var(--muted);font-size:13px}
+
+/* Data room */
+.room{display:grid;grid-template-columns:260px minmax(0,1fr);gap:20px;align-items:start}
+.room>*{min-width:0}
+main{overflow-wrap:break-word}
+.sidebar{background:var(--card);border:1px solid var(--line);border-radius:4px;position:sticky;top:12px}
+.sidebar h4{margin:0;padding:12px 14px;font-size:12px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line)}
+.docbtn{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line-2);background:none;padding:10px 14px;font:inherit;font-size:14px;cursor:pointer;color:var(--ink)}
+.docbtn:hover{background:#f5f3ee}
+.docbtn.sel{background:#eef1f6;box-shadow:inset 3px 0 0 var(--navy)}
+.docbtn .st{display:block;font-size:12px;margin-top:2px}
+.st.rev{color:var(--ok)}.st.unrev{color:var(--muted)}
+.sidefoot{padding:12px 14px;font-size:13px;color:var(--muted)}
+.vdrmeta{font-size:12.5px;color:var(--muted);margin-bottom:10px;display:flex;flex-wrap:wrap;gap:4px 14px}
+.doc{background:#fff;border:1px solid var(--line);border-radius:3px;padding:30px 40px;box-shadow:0 2px 6px rgba(0,0,0,.05)}
+.dochead{text-align:center;font-family:var(--serif);margin-bottom:18px;border-bottom:1px solid var(--line-2);padding-bottom:12px}
+.dochead .l0{font-size:17px;letter-spacing:.8px;color:var(--navy)}
+.dochead .l{font-size:13.5px;color:var(--muted)}
+.mgmtnote{font-size:13px;background:#f3f5f9;border:1px dashed #b9c3d6;padding:8px 12px;margin-bottom:14px;border-radius:3px}
+.para{position:relative;font-family:var(--serif);font-size:15.5px;line-height:1.65;padding:8px 12px 8px 54px;margin:2px 0;border-radius:3px;cursor:pointer;border-left:3px solid transparent}
+.para:hover{background:#f7f4ec}
+.para:focus-visible{outline:2px solid var(--navy);outline-offset:1px}
+.para .ref{position:absolute;left:8px;top:10px;font-family:var(--sans);font-size:11.5px;color:var(--muted);width:40px}
+.para.sel{background:var(--gold-bg);border-left-color:var(--gold)}
+.para.partner{box-shadow:inset 0 0 0 1px #9fb3d4}
+.para.locked{cursor:default}
+.hint{font-size:13px;color:var(--muted);margin:10px 0 0}
+.form{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:18px 20px;margin-top:16px}
+.form h3{margin:0 0 4px;font-family:var(--serif);font-weight:normal;color:var(--navy);font-size:18px}
+.sel-summary{font-size:14px;margin:6px 0 14px;padding:8px 10px;background:#f6f6f3;border-radius:3px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}
+label.f{display:block;font-size:12.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+select,textarea{display:block;width:100%;font:inherit;font-size:14.5px;margin-top:4px;padding:7px 8px;border:1px solid #c5c0b3;border-radius:3px;background:#fff;color:var(--ink)}
+textarea{min-height:76px;resize:vertical;font-family:var(--serif)}
+select:disabled,textarea:disabled{background:#f3f2ee;color:#555}
+.noissue{display:flex;align-items:center;gap:8px;font-size:14px;margin:0 0 12px;cursor:pointer}
+.err{color:var(--bad);font-size:13.5px;margin-top:10px}
+.formfoot{display:flex;justify-content:space-between;align-items:center;margin-top:14px;gap:10px;flex-wrap:wrap}
+.counter{font-size:12.5px;color:var(--muted)}
+
+/* Comparison */
+.cmp{background:var(--card);border:1px solid var(--line);border-radius:4px;margin-top:16px;overflow:hidden}
+.cmp-h{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 16px;background:#f4f2ec;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.cmp-h .title{font-family:var(--serif);font-size:17px;color:var(--navy)}
+.badge{font-size:12px;font-weight:600;padding:3px 9px;border-radius:12px;white-space:nowrap}
+.b-ok{background:var(--ok-bg);color:var(--ok)}.b-bad{background:var(--bad-bg);color:var(--bad)}.b-warn{background:var(--warn-bg);color:var(--warn)}
+table.cmpt{width:100%;border-collapse:collapse;font-size:14px}
+table.cmpt th,table.cmpt td{padding:9px 14px;border-bottom:1px solid var(--line-2);vertical-align:top;text-align:left}
+table.cmpt th{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:600;width:150px}
+table.cmpt thead th{background:#fafaf7}
+table.cmpt td.m{width:34px;text-align:center;font-weight:700}
+.mk-ok{color:var(--ok)}.mk-bad{color:var(--bad)}.mk-na{color:#aaa}
+.cl{font-weight:600;color:var(--navy)}
+.q{font-family:var(--serif);font-size:13.5px;color:#444;margin-top:3px}
+.alt{font-size:12.5px;color:var(--muted);margin-top:4px}
+.pnote{padding:12px 16px;border-top:1px solid var(--line);background:#f8f9fb;font-size:14px}
+.pnote b{color:var(--navy)}
+.pnote p{margin:4px 0;font-family:var(--serif);font-size:14.5px}
+
+/* Debrief */
+.score{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
+.tile{border:1px solid var(--line);border-radius:4px;padding:12px 14px;background:#fff}
+.tile .v{font-family:var(--serif);font-size:28px;color:var(--navy);line-height:1.1}
+.tile .k{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-top:4px}
+.tile.good .v{color:var(--ok)}.tile.badt .v{color:var(--bad)}
+.section-h{font-family:var(--serif);font-size:22px;color:var(--navy);font-weight:normal;margin:34px 0 6px}
+.sub{color:var(--muted);font-size:14px;margin:0 0 10px}
+.chartbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0}
+.seg{display:inline-flex;border:1px solid var(--navy);border-radius:4px;overflow:hidden}
+.seg button{font:inherit;font-size:13.5px;border:0;background:#fff;color:var(--navy);padding:6px 14px;cursor:pointer}
+.seg button.on{background:var(--navy);color:#fff}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:4px;background:#fff}
+table.chart{border-collapse:collapse;width:100%;min-width:900px;font-size:13.5px}
+table.chart th{background:var(--navy);color:#fff;text-align:left;padding:9px 10px;font-weight:600;font-size:12.5px;letter-spacing:.3px}
+table.chart td{padding:9px 10px;border-bottom:1px solid var(--line-2);vertical-align:top}
+table.chart tr:nth-child(even) td{background:#faf9f5}
+.copied{font-size:13px;color:var(--ok);margin-left:8px}
+.memo-ex table{width:100%;border-collapse:collapse;font-size:14px;margin:10px 0}
+.memo-ex th,.memo-ex td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+.memo-ex th{background:#f4f2ec;font-weight:600}
+.privileged{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--bad);font-weight:600}
+
+/* AI features */
+.hbtns{display:flex;gap:8px;flex-wrap:wrap}
+.aiset{background:#eef1f6;border-bottom:1px solid #d3dae6;padding:14px 16px}
+.aiset .in{max-width:1180px;margin:0 auto}
+.aiset h3{margin:0 0 6px;font-family:var(--serif);font-weight:normal;color:var(--navy);font-size:17px}
+.aiset .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.aiset input[type=password]{font:inherit;font-size:14px;padding:7px 8px;border:1px solid #c5c0b3;border-radius:3px;flex:1 1 260px;max-width:420px;min-width:0}
+.aiset p{font-size:13px;color:var(--muted);margin:8px 0 0}
+.keyst{font-size:13px;font-weight:600}
+.keyst.on{color:var(--ok)}.keyst.off{color:var(--warn)}
+.cmpwrap.wide{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:0 16px;align-items:start}
+.cmpwrap.wide .aiwrap{order:2}
+.cmpwrap.wide .aiwrap.full{grid-column:1/-1;order:0}
+.cmpwrap.wide .aiwrap.full+.cmp{grid-column:1/-1}
+.aiwrap{background:#fff;border:1px solid #c9d3e4;border-top:3px solid var(--navy);border-radius:4px;margin-top:16px;padding:14px 16px;font-size:14px}
+.aiwrap.full{border-top-color:var(--warn)}
+.ai-h{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+.ai-h .title{font-family:var(--serif);font-size:16px;color:var(--navy)}
+.ai-score{font-family:var(--serif);font-size:26px;line-height:1;color:var(--navy)}
+.ai-score small{font-size:14px;color:var(--muted)}
+.ai-score.s-hi{color:var(--ok)}.ai-score.s-lo{color:var(--bad)}
+.aiwrap h5{margin:10px 0 2px;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+.aiwrap p{margin:2px 0;font-family:var(--serif);font-size:14.5px;line-height:1.55}
+.ai-q{background:var(--gold-bg);border-left:3px solid var(--gold);padding:8px 10px;margin-top:4px;font-family:var(--serif);font-size:14.5px}
+.ai-reply textarea{min-height:64px}
+.ai-fb{background:#f3f5f9;border-radius:3px;padding:8px 10px;margin-top:8px}
+.ai-meta{font-size:12px;color:var(--muted);margin-top:8px}
+.ai-msg{color:var(--warn);font-size:14px}
+.loading{display:flex;align-items:center;gap:10px;color:var(--navy);font-size:14px;padding:6px 0}
+.spin{width:18px;height:18px;border:2px solid #c9d3e4;border-top-color:var(--navy);border-radius:50%;animation:spin .8s linear infinite;flex:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.btn.sm{font-size:13px;padding:6px 12px}
+.ai-memo{margin-top:6px}
+.ai-memo ul{padding-left:22px}
+@media (max-width:1100px){.cmpwrap.wide{display:block}}
+
+@media (max-width:860px){
+  .room{grid-template-columns:minmax(0,1fr)}
+  .sidebar{position:static}
+  .score{grid-template-columns:repeat(2,1fr)}
+  .grid2{grid-template-columns:1fr}
+  .paper{padding:22px 18px}
+  .doc{padding:20px 14px}
+  .para{padding-left:44px}
+  dl.glossary{grid-template-columns:1fr}
+  dl.glossary dd{margin-bottom:8px}
+  .steps .t{font-size:12px}
+  table.cmpt th{width:auto}
+}
+</style>
+</head>
+<body>
+<div class="fiction"><b>Fictional training exercise.</b> The scenario, documents, people, letters, investigations, and deal terms are invented for teaching purposes and do not describe any real transaction, dispute, or conduct of any company named.</div>
+<header class="top">
+  <div class="brand">Hale &amp; Whitcombe LLP <small>M&amp;A Associate Training · Legal Due Diligence Simulator</small></div>
+  <div class="hbtns"><button class="btn light" data-action="aisettings" aria-expanded="false" aria-controls="aiset">AI settings</button><button class="btn light" data-action="reset">Restart exercise</button></div>
+</header>
+<div class="aiset" id="aiset" hidden>
+ <div class="in">
+  <h3>AI partner settings</h3>
+  <div class="row">
+   <label for="keyin" class="f" style="margin-right:4px">OpenRouter key</label>
+   <input type="password" id="keyin" autocomplete="off" spellcheck="false" placeholder="sk-or-…">
+   <button class="btn sm" data-action="setkey">Use this key</button>
+   <button class="btn ghost sm" data-action="clearkey">Forget key</button>
+   <span id="keyst" class="keyst"></span>
+  </div>
+  <p>The key is kept in this tab’s memory only. It is never saved, and reloading the page forgets it. AI grading uses free OpenRouter models only (MiniMax M3.1 Flash, with NVIDIA Nemotron as a fallback). Free models may log prompts; everything in this exercise is fictional.</p>
+ </div>
+</div>
+<div class="progress"><div class="steps" id="steps"></div></div>
+<main id="main"></main>
+
+<script>
+/* ---------- Reference lists ---------- */
+const CATS=["Organizational and corporate","Financial","Commercial agreements","Partnership, JV, and insider agreements","Sales and marketing","Intellectual property","Real property","Human resources and employees","Litigation","Government regulation","Environmental","Tax","Other material matters"];
+const MATS=["Low","Medium","High"];
+const REPS=["No breach / required consents","Material customers / no termination notices","Compliance with laws / no investigations","No litigation","Employee and change-of-control payments","IP ownership and licenses","None"];
+const RESPS=["Closing condition","Pre-closing covenant","Specific indemnity","Escrow or holdback","Price adjustment","Exclusion","Disclosure schedule only","No action"];
+const STAGES=["Deal briefing","Request list","Data room review","Partner debrief"];
+
+/* ---------- Request list ---------- */
+const REQUESTS=[
+ {cat:"Organizational and corporate",items:[["1.1","Certificate of incorporation, bylaws, and all amendments, for Target and each subsidiary."],["1.2","Current capitalization table, including all options, warrants, and other rights to acquire equity."],["1.3","Minutes and written consents of the board, board committees, and shareholders for the past three years."]]},
+ {cat:"Financial",items:[["2.1","Audited financial statements for the last three fiscal years and unaudited interim statements for the current year."],["2.2","All credit agreements, notes, guarantees, and other debt instruments."],["2.3","Net revenue by customer for the top 20 customers for each of the last three fiscal years."]]},
+ {cat:"Commercial agreements",items:[["3.1","All supply agreements with annual payments exceeding $5 million."],["3.2","Any agreement containing a change-of-control, anti-assignment, consent, exclusivity, or non-compete provision."],["3.3","All customer, retailer, and distribution agreements with the top 20 customers."]]},
+ {cat:"Partnership, JV, and insider agreements",items:[["4.1","All joint venture, partnership, and strategic alliance agreements."],["4.2","All agreements between Target and Target Owner or its affiliates, including management and monitoring fee arrangements."]]},
+ {cat:"Sales and marketing",items:[["5.1","Current product labels, packaging, and advertising claims, with substantiation files."],["5.2","Consumer complaint logs for the past three years."]]},
+ {cat:"Intellectual property",items:[["6.1","Schedule of registered and applied-for trademarks, patents, and domain names."],["6.2","All in-licenses and out-licenses of intellectual property, including brand licenses."]]},
+ {cat:"Real property",items:[["7.1","All leases, subleases, and licenses of real property, with amendments."],["7.2","Deeds and title policies for all owned real property."]]},
+ {cat:"Human resources and employees",items:[["8.1","Employment agreements for all officers and any employee with annual compensation above $250,000."],["8.2","All change-of-control, retention, transaction bonus, and severance plans or agreements."],["8.3","All employee benefit plans and the most recent Form 5500 filings."]]},
+ {cat:"Litigation",items:[["9.1","All pending or threatened litigation, arbitration, and demand letters, with counsel's assessment."],["9.2","All settlement agreements entered into in the past five years."]]},
+ {cat:"Government regulation",items:[["10.1","All governmental inquiries, subpoenas, civil investigative demands, warning letters, and related correspondence."],["10.2","All material permits and food-safety registrations, and correspondence with food regulators."]]},
+ {cat:"Environmental",items:[["11.1","Phase I and Phase II environmental site assessments and any notices of violation."]]},
+ {cat:"Tax",items:[["12.1","Federal, state, and foreign income tax returns for the past three years."],["12.2","Any pending tax audits, assessments, or rulings."]]},
+ {cat:"Other material matters",items:[["13.1","Summary of all insurance policies, with claims history for the past five years."],["13.2","Any other fact or circumstance that could reasonably be material to a buyer of Target."]]}
+];
+
+/* ---------- Data room documents ---------- */
+const DOCS=[
+{id:"d1",short:"Tea Leaf Supply Agreement",file:"3.1.04_Highland_Leaf_Supply_Agreement.pdf",request:"3.1",
+ head:["TEA LEAF SUPPLY AGREEMENT","(Excerpts)","Highland Leaf Estates Ltd. · Lipton Teas and Infusions"],
+ paras:[
+  {ref:"Pre.",t:"This Tea Leaf Supply Agreement (the “Agreement”) is entered into as of March 1, 2022 between Highland Leaf Estates Ltd., a Kenyan company (“Supplier”), and Lipton Teas and Infusions (“Company”)."},
+  {ref:"§2.1",h:"Supply.",t:"Supplier shall sell, and Company shall purchase, not less than 18,000 metric tonnes of CTC black tea leaf per contract year, representing approximately 40% of Company’s black tea requirements, at the prices set out in Schedule A."},
+  {ref:"§4.2",h:"Term.",t:"The initial term ends February 28, 2027 and renews automatically for successive two-year terms unless either party gives 180 days’ written notice of non-renewal."},
+  {ref:"§11.3",h:"Change of Control.",t:"If Company undergoes a Change of Control, Supplier may terminate this Agreement on 60 days’ written notice delivered within 120 days after Supplier receives notice of the Change of Control. “Change of Control” means any transaction by which a person not controlling Company on the date hereof acquires more than 50% of Company’s voting securities."},
+  {ref:"§14.1",h:"Governing Law.",t:"This Agreement is governed by the laws of England and Wales. Disputes shall be resolved by arbitration in London under the LCIA Rules."}],
+ partner:{paras:[3],category:"Commercial agreements",materiality:"Medium",rep:"No breach / required consents",response:"Pre-closing covenant",
+  finding:"Supplier may terminate on 60 days’ notice after Pubco acquires Target (§11.3). Supplier provides about 40% of Target’s black tea leaf, and qualifying replacement supply would take 6 to 9 months.",
+  note:"Listed on the consents schedule. SPA §6.4 required Target Owner to use reasonable best efforts to get Supplier’s written waiver before closing. We did not make it a closing condition because Pubco’s sourcing team confirmed backup supply within 9 months, so losing the contract was a cost, not a deal-breaker. The waiver arrived two weeks before closing."}},
+
+{id:"d2",short:"Headquarters Office Lease",file:"7.1.01_Harbor_Point_HQ_Lease.pdf",request:"7.1",
+ head:["OFFICE LEASE","(Excerpts)","Harbor Point Owner LLC, Landlord · Lipton Teas and Infusions, Tenant"],
+ paras:[
+  {ref:"Pre.",t:"This Office Lease is made as of June 1, 2021 between Harbor Point Owner LLC (“Landlord”) and Lipton Teas and Infusions (“Tenant”) for about 64,000 rentable square feet on floors 18 through 20 of Harbor Point Center (the “Premises”), which Tenant shall use as its principal executive offices."},
+  {ref:"§3.1",h:"Term; Rent.",t:"The Term is ten (10) years, expiring May 31, 2031. Annual Base Rent is $2,560,000, increasing 2.5% each Lease Year."},
+  {ref:"§12.1",h:"Transfers.",t:"Tenant shall not assign this Lease or sublet any part of the Premises without Landlord’s prior written consent, which shall not be unreasonably withheld."},
+  {ref:"§12.3",h:"Deemed Assignment.",t:"Any transfer, in one or more transactions, of more than fifty percent (50%) of the stock or other ownership interests in Tenant, or of the power to direct Tenant’s management, shall be deemed an assignment requiring Landlord’s prior written consent. Any such transfer made without consent shall be void as against Landlord and shall be an Event of Default."},
+  {ref:"§12.5",h:"Recapture.",t:"Within thirty (30) days after receiving a request for consent, Landlord may elect to terminate this Lease as to the affected space."},
+  {ref:"§21",h:"Notices.",t:"All notices shall be in writing and delivered by nationally recognized overnight courier to the addresses in the Basic Lease Information."}],
+ partner:{paras:[3,4],category:"Real property",materiality:"Medium",rep:"No breach / required consents",response:"Closing condition",
+  finding:"The sale of 100% of Target’s shares is a deemed assignment under Lease §12.3. Closing without Landlord’s consent would be an Event of Default at Target’s headquarters, and asking for consent triggers Landlord’s §12.5 recapture right.",
+  note:"Listed on the consents schedule; landlord consent made a closing condition. We asked Landlord to waive the §12.5 recapture right in the same consent. Landlord delivered both on November 14, 2025 for a $50,000 consent fee, which Target Owner paid."}},
+
+{id:"d3",short:"FreshWay Distribution Agreement",file:"3.3.02_FreshWay_Master_Distribution_Agreement.pdf",request:"3.3",
+ head:["MASTER DISTRIBUTION AGREEMENT","(Excerpts)","FreshWay Markets, Inc. · Lipton Teas and Infusions"],
+ mgmt:"Target management note uploaded with this document: FreshWay was Target’s largest customer in FY2024, at 30.4% of net revenue.",
+ paras:[
+  {ref:"Pre.",t:"This Master Distribution Agreement is entered into as of January 15, 2023 between FreshWay Markets, Inc. (“Retailer”) and Lipton Teas and Infusions (“Supplier”)."},
+  {ref:"§2.1",h:"Appointment.",t:"Supplier appoints Retailer as a non-exclusive retail outlet for Supplier’s packaged tea and infusion products (the “Products”) in Retailer’s approximately 2,100 grocery stores and through its e-commerce channels."},
+  {ref:"§4.3",h:"Volume.",t:"Retailer shall issue purchase orders from time to time at its discretion. Nothing in this Agreement obligates Retailer to purchase any minimum quantity of Products or to maintain any particular shelf placement."},
+  {ref:"§9.2",h:"Termination for Convenience.",t:"Either party may terminate this Agreement at any time, for any reason or no reason, on ninety (90) days’ prior written notice to the other party, without liability other than payment for Products delivered before the effective date of termination."},
+  {ref:"§14.1",h:"Assignment.",t:"Neither party may assign this Agreement without the other party’s consent, except to an affiliate or to a successor to all or substantially all of its business or assets."},
+  {ref:"§16",h:"Governing Law.",t:"This Agreement is governed by the laws of the State of Ohio."}],
+ partner:{paras:[3,2],category:"Commercial agreements",materiality:"High",rep:"Material customers / no termination notices",response:"Escrow or holdback",
+  finding:"Target’s largest customer (30.4% of FY2024 net revenue) may terminate for convenience on 90 days’ notice (§9.2) and has no minimum purchase commitment (§4.3), so a large share of the revenue behind Pubco’s valuation has no contractual protection.",
+  note:"Not a consent issue: a stock sale is not an assignment under §14.1, so don’t list it on the consents schedule. We handled it economically. Target Owner gave a material-customers rep (no notice of termination or material volume reduction), and $120 million of the price was held back for 12 months, released only if FreshWay neither gave termination notice nor cut volume by more than 25%."}},
+
+{id:"d4",short:"Class Action Demand Letter",file:"9.1.03_Reyes_Calloway_Demand_Letter.pdf",request:"9.1",letter:true,
+ head:["REYES & CALLOWAY LLP","July 21, 2025 · Via Email and Overnight Courier","To: General Counsel, Lipton Teas and Infusions","Re: Deceptive “Natural” Labeling — Pre-Suit Demand"],
+ paras:[
+  {ref:"¶1",t:"We represent Dana Whitfield and a proposed nationwide class of consumers who purchased Lipton Teas and Infusions’ “Pure Garden Green Tea” and “Natural Herbal Infusions” product lines (the “Products”) since July 2021."},
+  {ref:"¶2",t:"Each package of the Products prominently states “100% Natural.” Independent laboratory testing commissioned by our client found glyphosate residue in four of six samples, and the Products’ “natural flavors” are extracted using synthetic solvents. Reasonable consumers understand “100% Natural” to mean free of synthetic ingredients and pesticide residue."},
+  {ref:"¶3",t:"These representations violate state consumer protection statutes and constitute breach of express warranty and unjust enrichment. Based on publicly reported sales, we estimate class-wide damages exceed $75 million."},
+  {ref:"¶4",t:"We demand that, within thirty (30) days, the Company (a) remove all “natural” claims from the Products’ labeling, (b) offer full refunds to all purchasers, and (c) preserve all relevant documents. Absent a satisfactory response, we will file a class action complaint without further notice."},
+  {ref:"¶5",t:"This letter is a confidential settlement communication subject to Federal Rule of Evidence 408."}],
+ partner:{paras:[3,2,1],category:"Litigation",materiality:"High",rep:"No litigation",response:"Specific indemnity",
+  finding:"Plaintiffs’ counsel threatens a nationwide consumer class action over “100% Natural” labeling, claiming damages above $75 million. The claim arose before signing and stays with Target, and therefore with Pubco, in a stock purchase.",
+  note:"Target disclosed the letter against the no-litigation rep, so the general indemnity would not have covered it. That is why we needed a specific indemnity for “Natural Labeling Matters” (this letter and the New Hanover inquiry): no basket, 36-month survival, backed by a $35 million special escrow. Pubco controls the defense after closing."}},
+
+{id:"d5",short:"State AG Investigative Demand",file:"10.1.01_New_Hanover_AG_CID.pdf",request:"10.1",letter:true,
+ head:["STATE OF NEW HANOVER · OFFICE OF THE ATTORNEY GENERAL","Division of Consumer Protection","August 4, 2025","Re: Civil Investigative Demand No. CP-2025-0417"],
+ paras:[
+  {ref:"¶1",t:"The Division of Consumer Protection has opened an investigation into whether Lipton Teas and Infusions (the “Company”) has engaged in deceptive or unconscionable practices in the labeling, advertising, and sale of tea products marketed as “Natural” or “100% Natural” to New Hanover consumers."},
+  {ref:"¶2",t:"Under Section 56-8-3 of the New Hanover Consumer Fraud Act, the Company is directed to produce, within forty-five (45) days of this letter: (a) all product labels used since January 1, 2020; (b) all substantiation for “natural” claims; (c) ingredient and supplier specifications; and (d) all consumer complaints about those claims."},
+  {ref:"¶3",t:"Violations of the Act may result in civil penalties of up to $10,000 per violation, restitution to affected consumers, and injunctive relief."},
+  {ref:"¶4",t:"This demand is not a finding that the Company has violated any law. The Company must preserve all documents relevant to this investigation and should direct questions to the undersigned Deputy Attorney General."}],
+ partner:{paras:[0,1,2],category:"Government regulation",materiality:"High",rep:"Compliance with laws / no investigations",response:"Specific indemnity",
+  finding:"A state attorney general has opened a consumer-fraud investigation into Target’s “natural” labeling, with penalties of up to $10,000 per violation. It overlaps with the threatened class action and could prompt inquiries in other states.",
+  note:"Disclosed against the compliance-with-laws rep and folded into the Natural Labeling Matters specific indemnity. We also added a pre-closing covenant giving Pubco review and consultation rights over Target’s response to the demand, so nothing went to the state that Pubco had not seen."}},
+
+{id:"d6",short:"CEO Employment Agreement",file:"8.1.01_CEO_Employment_Agreement.pdf",request:"8.1",
+ head:["EXECUTIVE EMPLOYMENT AGREEMENT","(Excerpts)","Lipton Teas and Infusions · Daniel R. Ashworth"],
+ paras:[
+  {ref:"Pre.",t:"This Agreement, dated as of September 1, 2022, is between Lipton Teas and Infusions (the “Company”) and Daniel R. Ashworth (“Executive”), who shall serve as the Company’s Chief Executive Officer."},
+  {ref:"§3.1",h:"Compensation.",t:"The Company shall pay Executive an annual base salary of $950,000 (“Base Salary”). Executive is eligible for an annual bonus with a target of 100% of Base Salary (“Target Bonus”)."},
+  {ref:"§7.1",h:"Termination Without Cause.",t:"If the Company terminates Executive’s employment without Cause, Executive shall receive continued Base Salary for eighteen (18) months, subject to signing a release."},
+  {ref:"§7.4",h:"Change in Control Payment.",t:"Upon the consummation of a Change in Control, whether or not Executive’s employment is terminated, the Company shall pay Executive a lump sum equal to 2.5 times the sum of Base Salary and Target Bonus, and all of Executive’s outstanding unvested equity awards shall immediately vest in full."},
+  {ref:"§7.6",h:"Excise Tax Gross-Up.",t:"If any payment to Executive would be subject to the excise tax imposed by Section 4999 of the Internal Revenue Code, the Company shall pay Executive an additional amount sufficient to place Executive in the same after-tax position as if no such tax applied."}],
+ partner:{paras:[3,4],category:"Human resources and employees",materiality:"Medium",rep:"Employee and change-of-control payments",response:"Price adjustment",
+  finding:"The CEO receives a single-trigger lump sum of 2.5 times salary plus target bonus (about $4.75 million) and full equity vesting at closing, whether or not the CEO is terminated (§7.4), plus an excise tax gross-up (§7.6).",
+  note:"Scheduled against the change-of-control payments rep and treated as a Transaction Expense, deducted dollar-for-dollar from the purchase price so Target Owner bore the cost. Before closing, Target held a Section 280G stockholder vote (available because Target is private), so the gross-up was never triggered. Pubco signed a new double-trigger retention agreement with the CEO."}},
+
+{id:"d7",short:"Insurance Program Summary",file:"13.1.01_Insurance_Program_Summary.pdf",request:"13.1",
+ head:["INSURANCE PROGRAM SUMMARY","Prepared by Marlowe Risk Partners (broker)","Named Insured: Lipton Teas and Infusions and subsidiaries","Policy Period: April 1, 2025 – April 1, 2026"],
+ paras:[
+  {ref:"1",h:"General Liability.",t:"Commercial general liability, written on an occurrence basis, with limits of $2,000,000 per occurrence and $4,000,000 general aggregate, plus a $4,000,000 products-completed operations aggregate. Deductible: $25,000 per occurrence."},
+  {ref:"2",h:"Umbrella Liability.",t:"$50,000,000 umbrella, following form over general liability, auto, and employer’s liability. All carriers are rated A or better by A.M. Best."},
+  {ref:"3",h:"Product Contamination and Recall.",t:"$10,000,000 per loss and in the aggregate, covering accidental contamination, malicious tampering, and government-mandated recall expenses."},
+  {ref:"4",h:"Change in Ownership.",t:"Each policy remains in force after a change in ownership or control of the Named Insured. Coverage for occurrences before the change is unaffected."},
+  {ref:"5",h:"Loss History and Premium.",t:"Two property claims were reported in the last five years, both below the deductible and closed. All premiums are paid in full through the end of the policy period."}],
+ partner:{none:true,
+  finding:"No material issues. The program is occurrence-based, limits are customary for a business of Target’s size, coverage continues after the change of control, and loss history is clean.",
+  note:"Nothing to schedule beyond the standard insurance rep. Pubco’s risk team moved Target into Pubco’s master program at the April 2026 anniversary. If you flagged the change-in-ownership clause, read it again: it says coverage continues. Over-flagging costs credibility with the client and buries the issues that matter."}}
+];
+
+/* ---------- State ---------- */
+const KEY="dd-sim-ai-v1";
+function blank(){return {para:null,noIssue:false,category:"",materiality:"",rep:"",response:"",finding:"",submitted:false,ai:null}}
+function fresh(){const s={stage:1,maxStage:1,cur:"d1",chart:"mine",reviews:{},memo:null};DOCS.forEach(d=>s.reviews[d.id]=blank());return s}
+let S=fresh();
+try{const raw=localStorage.getItem(KEY);if(raw){const p=JSON.parse(raw);if(p&&p.reviews&&DOCS.every(d=>p.reviews[d.id]))S=p}}catch(e){}
+/* AI requests don't survive a reload, so drop any half-finished loading states. */
+DOCS.forEach(d=>{const a=S.reviews[d.id].ai;if(a){if(a.status==="loading")S.reviews[d.id].ai=null;else if(a.replyStatus==="loading")a.replyStatus=null}});
+if(S.memo&&S.memo.status==="loading")S.memo=null;
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+
+/* ---------- AI (OpenRouter) ----------
+   DEFAULT_KEY ships with the page. Anything you put here is PUBLIC to every visitor
+   of a GitHub Pages site, so prefer leaving it as "PASTE_KEY_HERE" and pasting a key
+   into AI settings instead. A key pasted there lives in memory only. */
+const DEFAULT_KEY="PASTE_KEY_HERE";
+const AI_URL="https://openrouter.ai/api/v1/chat/completions";
+const AI_MODELS=["minimax/minimax-m3.1-flash:free","nvidia/nemotron-3-super-120b-a12b:free"];
+const AI_FAIL="AI grading unavailable — the answer key is shown below";
+let userKey="";
+let GEN=0;            // bumped on restart so late AI replies are ignored
+const DRAFT={};       // unsent follow-up replies, by doc id
+const activeKey=()=>userKey||(DEFAULT_KEY&&DEFAULT_KEY!=="PASTE_KEY_HERE"?DEFAULT_KEY:"");
+
+async function callModel(messages,maxTokens){
+  const key=activeKey();
+  if(!key){const e=new Error("No OpenRouter key");e.nokey=true;throw e}
+  let lastErr=new Error("No model answered");
+  for(const model of AI_MODELS){
+    const ctl=new AbortController(), timer=setTimeout(()=>ctl.abort(),90000);
+    try{
+      const headers={"Authorization":"Bearer "+key,"Content-Type":"application/json","X-Title":"Diligence Training Simulator"};
+      if(/^https?:/.test(location.protocol))headers["HTTP-Referer"]=location.origin;
+      const res=await fetch(AI_URL,{method:"POST",headers,signal:ctl.signal,
+        body:JSON.stringify({model,messages,temperature:0.2,max_tokens:maxTokens||3000})});
+      if(!res.ok){lastErr=new Error(model+" returned HTTP "+res.status);continue}   // 429 or any error → next model
+      const j=await res.json();
+      const c=j&&j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content;
+      if(typeof c!=="string"||!c.trim()){lastErr=new Error(model+" returned an empty reply");continue}
+      return {text:c.trim(),model};
+    }catch(e){lastErr=e}
+    finally{clearTimeout(timer)}
+  }
+  throw lastErr;
+}
+function parseJSON(text){
+  let t=String(text).trim().replace(/^```[a-zA-Z]*\s*/,"").replace(/\s*```$/,"").trim();
+  try{return JSON.parse(t)}catch(e){}
+  const a=t.indexOf("{"),b=t.lastIndexOf("}");
+  if(a>=0&&b>a)return JSON.parse(t.slice(a,b+1));
+  throw new Error("Reply was not JSON");
+}
+function checkGrade(g){
+  const n=Math.round(Number(g&&g.score));
+  if(!g||!isFinite(n)||typeof g.partner_followup!=="string"||!g.partner_followup.trim())throw new Error("Grade JSON missing fields");
+  return {score:Math.max(0,Math.min(4,n)),caught:String(g.caught||""),missed:String(g.missed||""),partner_followup:g.partner_followup.trim()};
+}
+/* One call, then one retry (on a bad reply or a failed request). */
+async function callJSON(messages,check){
+  let err;
+  for(let attempt=0;attempt<2;attempt++){
+    const msgs=attempt?[...messages,{role:"user",content:"Your previous reply could not be parsed. Reply again with ONLY the JSON object: no prose, no code fences."}]:messages;
+    try{const r=await callModel(msgs,3000);return {data:check(parseJSON(r.text)),model:r.model}}
+    catch(e){err=e;if(e.nokey)throw e}
+  }
+  throw err;
+}
+
+const docText=d=>d.head.join("\n")+"\n"+(d.mgmt?d.mgmt+"\n":"")+d.paras.map(p=>`[${p.ref}] ${p.h?p.h+" ":""}${p.t}`).join("\n");
+function yourAnswers(d){
+  const r=S.reviews[d.id];
+  if(r.noIssue)return "Marked the document: NO ISSUES FOUND.";
+  return `Clause flagged: ${clauseLabel(d,r.para)}\nCategory: ${r.category}\nMateriality: ${r.materiality}\nSPA representation: ${r.rep}\nDeal response: ${r.response}\nWritten finding: ${r.finding.trim()}`;
+}
+function partnerAnswers(d){
+  const p=d.partner;
+  if(p.none)return `NO ISSUES. Finding: ${p.finding}\nNote: ${p.note}`;
+  return `Clause: ${p.paras.map(i=>clauseLabel(d,i)).join(" (also accepted: ")}${p.paras.length>1?")":""}\nCategory: ${p.category}\nMateriality: ${p.materiality}\nSPA representation: ${p.rep}\nDeal response: ${p.response}\nFinding: ${p.finding}\nNote: ${p.note}`;
+}
+const DEAL_CTX="Deal context: Pubco (Starbucks Corporation, a public company) is buying 100% of the shares of Target (Lipton Teas and Infusions, a private company) from Target Owner (CVC funds) in a cash stock purchase. In a stock purchase every liability stays with Target, so Pubco inherits it; Pubco's protection lives in the SPA (reps, disclosure schedule, closing conditions, covenants, indemnities, escrows, price). This is a fictional training exercise.";
+
+async function gradeDoc(id){
+  const d=docById(id), r=S.reviews[id], gen=GEN;
+  if(!r.submitted)return;
+  r.ai={status:"loading"};save();refreshAI(id);
+  const messages=[
+    {role:"system",content:"You are Eleanor Vance, a supervising M&A partner grading a first-year associate's legal due diligence review. "+DEAL_CTX+
+      "\n\nGrade the associate's written finding on SUBSTANCE, not wording. Award one point for each: (1) identified the right issue in the right clause; (2) tied it to the right SPA representation; (3) recommended a sensible deal response (a different response that would still reasonably protect Pubco can earn the point; explain the trade-off); (4) explained why it matters to Pubco. For a document with no real issue, an associate who correctly cleared it scores 4; one who flagged a non-issue loses points for over-flagging."+
+      "\n\nReply with JSON ONLY, no prose and no code fences, exactly in this shape:\n{\"score\": <integer 0-4>, \"caught\": \"<1-2 sentences on what the associate got right>\", \"missed\": \"<1-2 sentences on what they missed or got wrong, or 'Nothing significant.'>\", \"partner_followup\": \"<one probing question a supervising partner would ask this associate>\"}\nSpeak to the associate as \"you\"."},
+    {role:"user",content:`DOCUMENT (${d.file}):\n${docText(d)}\n\nASSOCIATE'S REVIEW:\n${yourAnswers(d)}\n\nPARTNER'S ANSWER KEY (hidden from the associate until now):\n${partnerAnswers(d)}`}
+  ];
+  try{
+    const out=await callJSON(messages,checkGrade);
+    if(gen!==GEN)return;
+    S.reviews[id].ai={status:"done",grade:out.data,model:out.model};
+  }catch(e){
+    if(gen!==GEN)return;
+    S.reviews[id].ai={status:e.nokey?"nokey":"error"};
+    if(!e.nokey)console.warn("AI grading failed:",e.message);
+  }
+  save();refreshAI(id);
+}
+
+async function replyFollowup(id){
+  const d=docById(id), a=S.reviews[id].ai, gen=GEN, txt=(DRAFT[id]||"").trim();
+  if(!a||a.status!=="done"||!txt)return;
+  a.reply=txt;a.replyStatus="loading";a.feedback="";save();refreshAI(id);
+  const messages=[
+    {role:"system",content:"You are Eleanor Vance, a supervising M&A partner. "+DEAL_CTX+"\n\nYou asked a first-year associate a follow-up question about their diligence finding. Evaluate their reply in at most 3 short sentences, speaking to them as \"you\": say what is right, correct anything wrong, and name the key point they should have made if they missed it. Plain text only: no JSON, headings, or lists."},
+    {role:"user",content:`DOCUMENT:\n${docText(d)}\n\nASSOCIATE'S REVIEW:\n${yourAnswers(d)}\n\nPARTNER'S ANSWER KEY:\n${partnerAnswers(d)}\n\nYOUR FOLLOW-UP QUESTION:\n${a.grade.partner_followup}\n\nASSOCIATE'S REPLY:\n${txt}`}
+  ];
+  try{
+    const r=await callModel(messages,2000);
+    if(gen!==GEN)return;
+    a.feedback=r.text.replace(/^```[a-zA-Z]*\s*|\s*```$/g,"");a.replyStatus="done";delete DRAFT[id];
+  }catch(e){
+    if(gen!==GEN)return;
+    a.replyStatus=e.nokey?"nokey":"error";
+  }
+  save();refreshAI(id);
+}
+
+async function draftMemo(){
+  const gen=GEN;
+  S.memo={status:"loading"};save();refreshMemo();
+  const findings=DOCS.map((d,i)=>`${i+1}. ${d.short} (${d.file})\n${yourAnswers(d)}`).join("\n\n");
+  const messages=[
+    {role:"system",content:"You draft legal due diligence memos for a first-year M&A associate. "+DEAL_CTX+"\n\nWrite a short diligence memo (about 250-350 words) to the Office of the General Counsel of Pubco, built ONLY from the associate's findings below and kept in the associate's own words and judgments as far as possible. Do not add issues the associate did not identify, and do not correct their conclusions; if they cleared a document, say no issues were identified. Structure: a one-paragraph summary naming the most significant exposures; then a line reading 'Key findings' followed by one '- ' bullet per document with an issue (issue, exposure/materiality, recommended SPA treatment and the representation implicated); then one closing sentence on next steps. Plain text with '- ' bullets only: no tables, headings with #, or code fences. Do not include a To/From header."},
+    {role:"user",content:"ASSOCIATE'S FINDINGS:\n\n"+findings}
+  ];
+  try{
+    const r=await callModel(messages,5000);
+    if(gen!==GEN)return;
+    S.memo={status:"done",text:r.text.replace(/^```[a-zA-Z]*\s*|\s*```$/g,""),model:r.model};
+  }catch(e){
+    if(gen!==GEN)return;
+    S.memo={status:e.nokey?"nokey":"error"};
+  }
+  save();refreshMemo();
+}
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const docById=id=>DOCS.find(d=>d.id===id);
+const allSubmitted=()=>DOCS.every(d=>S.reviews[d.id].submitted);
+const clauseLabel=(d,i)=>{const p=d.paras[i];if(!p)return"";if(d.letter)return"Letter "+p.ref;if(p.ref==="Pre.")return"Preamble";return /^\d+$/.test(p.ref)?"Item "+p.ref+" "+(p.h||"").replace(/\.$/,""):p.ref+" "+(p.h||"").replace(/\.$/,"")};
+const trunc=(s,n)=>s.length>n?s.slice(0,n).replace(/\s+\S*$/,"")+"…":s;
+const reqText=n=>{for(const c of REQUESTS)for(const it of c.items)if(it[0]===n)return it[1];return""};
+
+/* ---------- Progress ---------- */
+function renderSteps(){
+  $("#steps").innerHTML=STAGES.map((t,i)=>{const n=i+1;const cls=n===S.stage?"active":(n<S.stage||n<=S.maxStage?"done":"");
+    return `<button class="step ${cls}" data-action="goto" data-stage="${n}" ${n>S.maxStage?"disabled":""}><div class="bar"></div><div class="n">Stage ${n}</div><div class="t">${t}</div></button>`}).join("");
+}
+function go(n){S.stage=n;if(n>S.maxStage)S.maxStage=n;save();render();window.scrollTo(0,0)}
+
+/* ---------- Stage 1: briefing ---------- */
+function stage1(){return `<article class="paper">
+<div class="privileged">Privileged &amp; Confidential · Attorney Work Product</div>
+<h1>Memorandum</h1>
+<div class="memohead"><b>To</b><span>First-Year Associate, M&amp;A Group</span><b>From</b><span>Eleanor Vance, Partner</span><b>Date</b><span>August 18, 2025</span><b>Re</b><span>Project Chai: Pubco’s acquisition of Lipton Teas and Infusions. Your diligence assignment.</span></div>
+
+<h2>1. The transaction</h2>
+<p>Our client, Starbucks Corporation (“<b>Pubco</b>”), a public company, has agreed in principle to buy 100% of the outstanding shares of Lipton Teas and Infusions (“<b>Target</b>”), a private company, from funds managed by CVC Capital Partners (“<b>Target Owner</b>”), a UK private equity fund. Pubco will pay cash under a stock purchase agreement (the “<b>SPA</b>”). We are targeting signing in October and closing before year-end, subject to antitrust clearance.</p>
+<p>Because this is a stock purchase, not an asset purchase, Pubco cannot pick which liabilities it takes. Target stays intact, with every contract, lawsuit, investigation, and employee promise it has today. Pubco simply becomes the owner. <b>Whatever we miss, Pubco owns.</b> Our protection lives in the SPA: the representations and warranties, the disclosure schedule, closing conditions, covenants, indemnities, escrows, and the price.</p>
+
+<h2>2. Pubco’s objectives</h2>
+<ul>
+<li>Acquire Target’s brands, supply base, and grocery relationships to grow Pubco’s packaged tea business.</li>
+<li>Pay a price that reflects Target’s real risks, and push known risks back onto Target Owner wherever we can.</li>
+<li>Close on schedule, with no consent or regulatory surprises between signing and closing.</li>
+<li>Avoid post-closing surprises in Pubco’s public reporting or in the press.</li>
+</ul>
+
+<h2>3. Why a public-company buyer diligences a private target</h2>
+<ul>
+<li><b>Liabilities assumed.</b> In a stock deal Pubco inherits everything. Diligence is how we find what it inherits before the price and terms are fixed.</li>
+<li><b>The board’s duty of care and the business judgment rule.</b> Pubco’s directors must act on an informed basis. A documented, reasonable diligence process is the record that they informed themselves, which supports business judgment rule protection if the deal is later challenged.</li>
+<li><b>Public reporting and internal controls.</b> After closing, Target’s results flow into Pubco’s consolidated 10-Q and 10-K filings, which Pubco’s CEO and CFO certify. Pubco must also bring Target, which has never been subject to SEC rules, into its internal control over financial reporting. Contingencies we find feed Pubco’s loss-contingency and risk-factor disclosure.</li>
+<li><b>Reputational risk.</b> A consumer brand’s problems become Pubco’s headlines. A labeling scandal at Target will be reported as a Pubco story.</li>
+</ul>
+
+<h2>4. Key concerns for this deal</h2>
+<ol>
+<li><b>Change-of-control consequences:</b> consents, termination rights, and defaults triggered by the sale.</li>
+<li><b>Customer concentration:</b> dependence on a few large grocery customers, and whether they can walk away.</li>
+<li><b>Pending or threatened litigation,</b> including demand letters that have not yet become lawsuits.</li>
+<li><b>Regulatory compliance:</b> food labeling, advertising claims, and any government inquiries.</li>
+<li><b>IP rights:</b> whether Target owns or validly licenses the brands it sells.</li>
+<li><b>Key-employee payments:</b> severance, bonuses, and acceleration triggered by the deal.</li>
+</ol>
+
+<h2>5. Your assignment</h2>
+<p>Review the seven documents I have pulled from the data room. For each one, click the paragraph that raises the issue, or mark “no issues found.” Then classify it, rate its materiality, identify the SPA representation it implicates, recommend a deal response, and write a one- or two-sentence finding in memo style. After you submit each document, you will see how I handled it.</p>
+<div class="callout">
+<p><b>Calibrating materiality.</b> <b>High:</b> could affect price, deal certainty, or require board attention. <b>Medium:</b> needs specific SPA treatment but does not threaten the deal. <b>Low:</b> schedule it and track it.</p>
+<p><b>Don’t over-flag.</b> A diligence chart that flags everything protects no one. Some documents are clean, and saying so is part of the job.</p>
+</div>
+<h3>Deal responses, briefly</h3>
+<dl class="glossary">
+<dt>Closing condition</dt><dd>Pubco need not close unless the item is resolved (for example, a consent is obtained).</dd>
+<dt>Pre-closing covenant</dt><dd>Target or Target Owner must take, or refrain from, an action between signing and closing.</dd>
+<dt>Specific indemnity</dt><dd>Target Owner pays Pubco for losses from a known, identified matter, outside the usual basket and cap.</dd>
+<dt>Escrow or holdback</dt><dd>Part of the price is set aside to secure recovery or released only if a risk does not materialize.</dd>
+<dt>Price adjustment</dt><dd>The purchase price is reduced to reflect a quantifiable cost.</dd>
+<dt>Exclusion</dt><dd>An asset or liability is carved out of the deal before closing.</dd>
+<dt>Disclosure schedule only</dt><dd>The item is disclosed against a rep. That protects the seller; it gives Pubco no recovery.</dd>
+<dt>No action</dt><dd>Nothing beyond the standard reps is needed.</dd>
+</dl>
+<div class="nav"><span class="counter">Stage 1 of 4</span><button class="btn" data-action="goto" data-stage="2">Continue to the request list →</button></div>
+</article>`}
+
+/* ---------- Stage 2: request list ---------- */
+function stage2(){
+  const tagsFor=n=>DOCS.filter(d=>d.request===n).map(d=>`<span class="tag">📄 ${esc(d.short)}</span>`).join("");
+  return `<article class="paper">
+<div class="legend">Due Diligence Request List</div>
+<h1>Project Chai: Initial Legal Due Diligence Request List</h1>
+<div class="memohead"><b>To</b><span>Ashby Ross LLP, counsel to Target and Target Owner</span><b>From</b><span>Hale &amp; Whitcombe LLP, counsel to Pubco</span><b>Date</b><span>August 11, 2025</span></div>
+<h2>Cover note</h2>
+<div class="parties">
+ <div class="party"><b>Buyer: Starbucks Corporation (“Pubco”)</b><span>Counsel: Hale &amp; Whitcombe LLP (E. Vance, Partner)</span></div>
+ <div class="party"><b>Target: Lipton Teas and Infusions</b><span>Counsel: Ashby Ross LLP</span></div>
+ <div class="party"><b>Seller: CVC Capital Partners (“Target Owner”)</b><span>Counsel: Ashby Ross LLP (London and New York)</span></div>
+</div>
+<p>Please upload responsive documents to the virtual data room, indexed to the request numbers below. Unless a request says otherwise, it covers the past three years, and “Target” includes all of its subsidiaries. Where no documents exist, please say so in writing so we can close the request.</p>
+<p><b>Process.</b> We will review uploads on a rolling basis, send follow-up requests through the shared tracker, and schedule calls with Target management on open items. Our findings will feed a diligence memo to Pubco and the negotiation of the SPA’s representations, disclosure schedule, and risk-allocation provisions.</p>
+<div class="callout"><p>Documents tagged 📄 below are the seven you will review in Stage 3.</p></div>
+${REQUESTS.map((c,ci)=>`<div class="reqcat"><h3>${ci+1}. ${esc(c.cat)}</h3>${c.items.map(it=>`<div class="req"><span class="num">${it[0]}</span><div>${esc(it[1])}${tagsFor(it[0])?`<div>${tagsFor(it[0])}</div>`:""}</div></div>`).join("")}</div>`).join("")}
+<div class="nav"><button class="btn ghost" data-action="goto" data-stage="1">← Briefing</button><button class="btn" data-action="goto" data-stage="3">Open the data room →</button></div>
+</article>`}
+
+/* ---------- Stage 3: data room ---------- */
+function opts(list,val,ph){return `<option value="">${ph}</option>`+list.map(x=>`<option ${x===val?"selected":""}>${esc(x)}</option>`).join("")}
+function stage3(){
+  const d=docById(S.cur), r=S.reviews[d.id], done=DOCS.filter(x=>S.reviews[x.id].submitted).length;
+  const locked=r.submitted, pIdx=locked&&!d.partner.none?d.partner.paras[0]:-1;
+  const side=DOCS.map((x,i)=>{const rv=S.reviews[x.id];return `<button class="docbtn ${x.id===d.id?"sel":""}" data-action="doc" data-id="${x.id}">${i+1}. ${esc(x.short)}<span class="st ${rv.submitted?"rev":"unrev"}">${rv.submitted?"✓ Reviewed":"○ Unreviewed"}</span></button>`}).join("");
+  const paras=d.paras.map((p,i)=>`<div class="para ${r.para===i?"sel":""} ${i===pIdx?"partner":""} ${locked?"locked":""}" ${locked?"":`role="button" tabindex="0" data-action="para" data-i="${i}"`}><span class="ref">${esc(p.ref)}</span>${p.h?`<b>${esc(p.h)}</b> `:""}${esc(p.t)}</div>`).join("");
+  const dis=locked||r.noIssue?"disabled":"";
+  const selTxt=r.noIssue?"You marked this document <b>no issues found</b>.":r.para!=null?`Flagged clause: <b>${esc(clauseLabel(d,r.para))}</b>`:"No paragraph selected yet. Click the paragraph that raises the issue, or check “no issues found.”";
+  return `<div class="room">
+<aside class="sidebar"><h4>Data room · Project Chai</h4>${side}<div class="sidefoot">${done} of ${DOCS.length} submitted<br><br><button class="btn" style="width:100%" data-action="goto" data-stage="4" ${allSubmitted()?"":"disabled"}>Go to partner debrief →</button></div></aside>
+<section>
+ <div class="vdrmeta"><span>📁 ${esc(d.file)}</span><span>Responds to Request ${d.request}: ${esc(trunc(reqText(d.request),80))}</span></div>
+ <div class="doc">
+  <div class="dochead">${d.head.map((l,i)=>`<div class="${i===0?"l0":"l"}">${esc(l)}</div>`).join("")}</div>
+  ${d.mgmt?`<div class="mgmtnote">${esc(d.mgmt)}</div>`:""}
+  ${paras}
+ </div>
+ ${locked?"":`<p class="hint">Click a paragraph to flag it. Click it again to clear.</p>`}
+ <div class="form">
+  <h3>Your review</h3>
+  <label class="noissue"><input type="checkbox" data-action="noissue" ${r.noIssue?"checked":""} ${locked?"disabled":""}> No issues found in this document</label>
+  <div class="sel-summary">${selTxt}</div>
+  <div class="grid2">
+   <div><label class="f" for="f-cat">1. Diligence category</label><select id="f-cat" data-field="category" ${dis}>${opts(CATS,r.category,"Select a category…")}</select></div>
+   <div><label class="f" for="f-mat">2. Materiality</label><select id="f-mat" data-field="materiality" ${dis}>${opts(MATS,r.materiality,"Select materiality…")}</select></div>
+   <div><label class="f" for="f-rep">3. SPA representation implicated</label><select id="f-rep" data-field="rep" ${dis}>${opts(REPS,r.rep,"Select a representation…")}</select></div>
+   <div><label class="f" for="f-resp">4. Recommended deal response</label><select id="f-resp" data-field="response" ${dis}>${opts(RESPS,r.response,"Select a response…")}</select></div>
+  </div>
+  <div style="margin-top:12px"><label class="f" for="f-find">5. Finding (1–2 sentences, memo style)</label><textarea id="f-find" data-field="finding" maxlength="600" ${dis} placeholder="e.g., Landlord consent is required for the change of control under §12.3; failure to obtain it is an Event of Default at Target’s headquarters.">${esc(r.finding)}</textarea></div>
+  <div id="err" class="err"></div>
+  <div class="formfoot">
+   <span class="counter">${locked?"Submitted. Partner’s review shown below.":"The partner’s answer stays hidden until you submit."}</span>
+   ${locked?nextBtn():`<button class="btn" data-action="submit">Submit review</button>`}
+  </div>
+ </div>
+ ${locked?aiPanelHTML(d.id)+compareHTML(d):""}
+</section></div>`}
+function nextBtn(){
+  const nx=DOCS.find(x=>!S.reviews[x.id].submitted);
+  if(nx)return `<button class="btn" data-action="doc" data-id="${nx.id}">Next unreviewed document →</button>`;
+  return `<button class="btn" data-action="goto" data-stage="4">Go to partner debrief →</button>`;
+}
+
+/* ---------- Evaluation ---------- */
+function evaluate(d){
+  const r=S.reviews[d.id], p=d.partner;
+  if(p.none)return r.noIssue?{o:"cleared"}:{o:"false"};
+  if(r.noIssue)return {o:"missed"};
+  if(p.paras.includes(r.para))return {o:"caught"};
+  return {o:"wrong"};
+}
+const OUT={caught:["Issue caught","b-ok"],cleared:["Correctly cleared","b-ok"],missed:["Issue missed","b-bad"],false:["False flag","b-bad"],wrong:["Wrong clause: missed issue + false flag","b-warn"]};
+function mark(a,b,comparable){if(!comparable)return `<td class="m mk-na">—</td>`;return a===b?`<td class="m mk-ok" title="Match">✓</td>`:`<td class="m mk-bad" title="Different">✗</td>`}
+function compareHTML(d){
+  const r=S.reviews[d.id],p=d.partner,ev=evaluate(d),both=!r.noIssue&&!p.none;
+  const yourClause=r.noIssue?"<i>No issues found</i>":`<div class="cl">${esc(clauseLabel(d,r.para))}</div><div class="q">${esc(trunc(d.paras[r.para].t,150))}</div>`;
+  let pClause="<i>No issues found</i>";
+  if(!p.none){const i0=p.paras[0];pClause=`<div class="cl">${esc(clauseLabel(d,i0))}</div><div class="q">${esc(trunc(d.paras[i0].t,150))}</div>`;
+    if(p.paras.length>1)pClause+=`<div class="alt">Also accepted: ${p.paras.slice(1).map(i=>esc(clauseLabel(d,i))).join(", ")}</div>`}
+  const v=(x,y)=>x||(y?"—":"—");
+  const row=(k,a,b,cmp)=>`<tr><th>${k}</th><td>${a}</td><td>${b}</td>${cmp}</tr>`;
+  const clauseMk=p.none?(r.noIssue?`<td class="m mk-ok">✓</td>`:`<td class="m mk-bad">✗</td>`):(r.noIssue?`<td class="m mk-bad">✗</td>`:(p.paras.includes(r.para)?`<td class="m mk-ok">✓</td>`:`<td class="m mk-bad">✗</td>`));
+  return `<div class="cmp">
+ <div class="cmp-h"><span class="title">${esc(d.short)}</span><span class="badge ${OUT[ev.o][1]}">${OUT[ev.o][0]}</span></div>
+ <table class="cmpt"><thead><tr><th></th><th>Your review</th><th>Partner’s review</th><th class="m"></th></tr></thead><tbody>
+ ${row("Clause flagged",yourClause,pClause,clauseMk)}
+ ${row("Category",esc(r.noIssue?"—":r.category),esc(p.none?"—":p.category),mark(r.category,p.category,both))}
+ ${row("Materiality",esc(r.noIssue?"—":r.materiality),esc(p.none?"—":p.materiality),mark(r.materiality,p.materiality,both))}
+ ${row("Representation",esc(r.noIssue?"—":r.rep),esc(p.none?"—":p.rep),mark(r.rep,p.rep,both))}
+ ${row("Deal response",esc(r.noIssue?"—":r.response),esc(p.none?"—":p.response),mark(r.response,p.response,both))}
+ ${row("Finding",esc(r.noIssue?"No issues found.":r.finding),esc(p.finding),`<td class="m"></td>`)}
+ </tbody></table>
+ <div class="pnote"><b>Partner’s note: why it mattered and how the SPA handled it</b><p>${esc(p.note)}</p></div>
+</div>`}
+
+/* ---------- AI panels ---------- */
+const nl2br=s=>esc(s).replace(/\n/g,"<br>");
+const spinner=t=>`<div class="loading" role="status"><span class="spin" aria-hidden="true"></span>${t}</div>`;
+const modelName=m=>m?`<div class="ai-meta">AI feedback from ${esc(m.split("/")[1].replace(/:free$/,""))} (free model). It can be wrong; the partner’s answer key is the authority.</div>`:"";
+function aiPanelHTML(id){
+  const a=S.reviews[id].ai, st=a?a.status:"none";
+  const head=t=>`<div class="ai-h"><span class="title">AI partner grade</span>${t||""}</div>`;
+  if(st==="loading")return `<div class="aiwrap" data-ai="${id}" aria-live="polite">${head()}${spinner("The partner is reading your finding…")}</div>`;
+  if(st==="nokey")return `<div class="aiwrap full" data-ai="${id}" aria-live="polite">${head()}<p class="ai-msg">AI grading is off: no OpenRouter key yet. Add one in <b>AI settings</b> at the top of the page, then click Grade. The answer key is shown below.</p><div style="margin-top:8px"><button class="btn sm" data-action="aigrade" data-id="${id}">Grade with AI</button></div></div>`;
+  if(st==="error"||st==="none")return `<div class="aiwrap full" data-ai="${id}" aria-live="polite">${head()}<p class="ai-msg">${st==="error"?esc(AI_FAIL):"Not graded by AI yet. The answer key is shown below."}</p><div style="margin-top:8px"><button class="btn ghost sm" data-action="aigrade" data-id="${id}">${st==="error"?"Try again":"Grade with AI"}</button></div></div>`;
+  const g=a.grade, cls=g.score>=3?"s-hi":g.score<=1?"s-lo":"";
+  let reply;
+  if(a.replyStatus==="loading")reply=`<div class="ai-fb"><b>Your reply:</b> ${nl2br(a.reply)}</div>${spinner("The partner is considering your answer…")}`;
+  else if(a.replyStatus==="done")reply=`<div class="ai-fb"><b>Your reply:</b> ${nl2br(a.reply)}</div><h5>Partner’s response</h5><p>${nl2br(a.feedback)}</p>`;
+  else reply=`<div class="ai-reply" style="margin-top:8px"><label class="f" for="rep-${id}">Your answer</label><textarea id="rep-${id}" data-reply="${id}" maxlength="800" placeholder="Answer the partner’s question in a sentence or two.">${esc(DRAFT[id]||a.reply||"")}</textarea>${a.replyStatus==="error"||a.replyStatus==="nokey"?`<p class="ai-msg" style="margin-top:6px">${a.replyStatus==="nokey"?"Add an OpenRouter key in AI settings first.":"AI feedback unavailable right now. Try again in a moment."}</p>`:""}<div style="margin-top:8px"><button class="btn sm" data-action="aireply" data-id="${id}">Send answer</button></div></div>`;
+  return `<div class="aiwrap" data-ai="${id}" aria-live="polite">${head(`<span class="ai-score ${cls}">${g.score}<small> / 4</small></span>`)}
+<h5>What you caught</h5><p>${nl2br(g.caught)}</p>
+<h5>What you missed</h5><p>${nl2br(g.missed)}</p>
+<h5>Partner’s follow-up</h5><div class="ai-q">${nl2br(g.partner_followup)}</div>
+${reply}${modelName(a.model)}</div>`;
+}
+function refreshAI(id){document.querySelectorAll(`[data-ai="${id}"]`).forEach(el=>{el.outerHTML=aiPanelHTML(id)})}
+function mdLite(t){
+  const inl=s=>esc(s).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>");
+  let html="",list=false;
+  String(t).split(/\n/).forEach(line=>{
+    const l=line.trim(), m=l.match(/^[-*•]\s+(.*)/);
+    if(m){if(!list){html+="<ul>";list=true}html+=`<li>${inl(m[1])}</li>`;return}
+    if(list){html+="</ul>";list=false}
+    if(!l)return;
+    const h=l.match(/^#{1,6}\s+(.*)/)||l.match(/^\*\*([^*]+)\*\*:?$/);
+    html+=h?`<h3>${inl(h[1])}</h3>`:`<p>${inl(l)}</p>`;
+  });
+  return html+(list?"</ul>":"");
+}
+function memoHTML(){
+  const m=S.memo, st=m?m.status:"none";
+  let body;
+  if(st==="loading")body=spinner("Drafting your memo from your seven findings…");
+  else if(st==="done")body=`<article class="paper memo-ex ai-memo"><div class="privileged">Draft · Built from your findings</div><h1>Memorandum</h1><div class="memohead"><b>To</b><span>Office of the General Counsel, Pubco</span><b>From</b><span>First-Year Associate, Hale &amp; Whitcombe LLP</span><b>Re</b><span>Project Chai: Summary of legal due diligence findings (draft)</span></div>${mdLite(m.text)}${modelName(m.model)}</article><div style="margin-top:10px"><button class="btn ghost sm" data-action="aimemo">Redraft</button></div>`;
+  else body=`${st==="error"?`<p class="ai-msg">AI memo unavailable right now. Your diligence chart above and the partner’s memo below still work.</p>`:st==="nokey"?`<p class="ai-msg">Add an OpenRouter key in AI settings first.</p>`:""}<button class="btn" data-action="aimemo">Draft my memo with AI</button>`;
+  return `<div data-ai-memo aria-live="polite">${body}</div>`;
+}
+function refreshMemo(){const el=document.querySelector("[data-ai-memo]");if(el)el.outerHTML=memoHTML()}
+
+/* ---------- Stage 4: debrief ---------- */
+function scores(){
+  const s={total:0,caught:0,missed:0,falseF:0,cleanTotal:0,cleared:0,mat:0,resp:0,cat:0,rep:0};
+  DOCS.forEach(d=>{const p=d.partner,r=S.reviews[d.id],o=evaluate(d).o;
+    if(p.none){s.cleanTotal++;if(o==="cleared")s.cleared++;else s.falseF++;return}
+    s.total++;
+    if(o==="caught"){s.caught++;if(r.materiality===p.materiality)s.mat++;if(r.response===p.response)s.resp++;if(r.category===p.category)s.cat++;if(r.rep===p.rep)s.rep++}
+    else if(o==="missed")s.missed++;
+    else {s.missed++;s.falseF++}});
+  return s;
+}
+const CHART_HEAD=["Document","Issue","Category","Materiality","Representation","Deal Response","Source Clause"];
+function chartRows(which){
+  return DOCS.map(d=>{
+    if(which==="partner"){const p=d.partner;
+      return p.none?[d.short,p.finding,"—","—","—","No action","—"]:[d.short,p.finding,p.category,p.materiality,p.rep,p.response,p.paras.map(i=>clauseLabel(d,i)).join("; ")]}
+    const r=S.reviews[d.id];
+    return r.noIssue?[d.short,"No issues found.","—","—","—","No action","—"]:[d.short,r.finding,r.category,r.materiality,r.rep,r.response,clauseLabel(d,r.para)];
+  });
+}
+function chartTable(which){return `<table class="chart"><thead><tr>${CHART_HEAD.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${chartRows(which).map(r=>`<tr>${r.map(c=>`<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table>`}
+function stage4(){
+  if(!allSubmitted())return `<div class="paper"><h1>Partner debrief</h1><p>Submit all seven data-room reviews to unlock the debrief.</p><button class="btn" data-action="goto" data-stage="3">Back to the data room</button></div>`;
+  const s=scores(), pct=c=>s.caught?`${c} / ${s.caught}`:"—";
+  const verdict=s.caught===s.total&&s.falseF===0?"Clean sweep: every issue caught and nothing over-flagged.":s.caught>=s.total-1&&s.falseF<=1?"Strong review. Look closely at the items below where your answers differed.":"Several gaps. Read each partner note below; the reasoning matters more than the score.";
+  return `<div class="paper" style="padding-bottom:28px">
+<div class="legend">Stage 4 · Partner debrief</div>
+<h1>Scorecard</h1>
+<p class="sub" style="font-family:var(--sans)">${verdict} Materiality, response, category, and representation matches are counted only for issues you caught on the right clause.</p>
+<div class="score">
+ <div class="tile ${s.caught===s.total?"good":""}"><div class="v">${s.caught} / ${s.total}</div><div class="k">Issues caught</div></div>
+ <div class="tile ${s.missed?"badt":"good"}"><div class="v">${s.missed}</div><div class="k">Issues missed</div></div>
+ <div class="tile ${s.falseF?"badt":"good"}"><div class="v">${s.falseF}</div><div class="k">False flags</div></div>
+ <div class="tile ${s.cleared===s.cleanTotal?"good":"badt"}"><div class="v">${s.cleared} / ${s.cleanTotal}</div><div class="k">Clean documents cleared</div></div>
+ <div class="tile"><div class="v">${pct(s.mat)}</div><div class="k">Materiality matches</div></div>
+ <div class="tile"><div class="v">${pct(s.resp)}</div><div class="k">Deal response matches</div></div>
+ <div class="tile"><div class="v">${pct(s.cat)}</div><div class="k">Category matches</div></div>
+ <div class="tile"><div class="v">${pct(s.rep)}</div><div class="k">Representation matches</div></div>
+</div>
+</div>
+
+<h2 class="section-h">Document-by-document comparison</h2>
+<p class="sub">Your review beside the partner’s, with the partner’s note on how each item was handled in the SPA, and the AI partner’s grade of your written finding.</p>
+${DOCS.map(d=>`<div class="cmpwrap wide">${aiPanelHTML(d.id)}${compareHTML(d)}</div>`).join("")}
+
+<h2 class="section-h">Diligence chart</h2>
+<div class="chartbar">
+ <div class="seg" role="group" aria-label="Chart source"><button class="${S.chart==="mine"?"on":""}" data-action="chart" data-v="mine">Your review</button><button class="${S.chart==="partner"?"on":""}" data-action="chart" data-v="partner">Partner’s chart</button></div>
+ <span><button class="btn" data-action="copy">Copy chart</button><span id="copied" class="copied"></span></span>
+</div>
+<div class="tablewrap">${chartTable(S.chart)}</div>
+
+<h2 class="section-h">Your diligence memo (AI draft)</h2>
+<p class="sub">Turn your seven findings into a short memo to Pubco, in your words, then compare it with the partner’s memo excerpt below.</p>
+${memoHTML()}
+
+<h2 class="section-h">From the partner’s final diligence memo</h2>
+<article class="paper memo-ex">
+<div class="privileged">Privileged &amp; Confidential · Attorney-Client Communication</div>
+<h1>Memorandum</h1>
+<div class="memohead"><b>To</b><span>Office of the General Counsel, Pubco</span><b>From</b><span>Hale &amp; Whitcombe LLP (E. Vance)</span><b>Date</b><span>November 24, 2025</span><b>Re</b><span>Project Chai: Summary of legal due diligence findings and SPA risk allocation (excerpt)</span></div>
+<h2>I. Summary</h2>
+<p>We found no matter that, in our view, warranted a recommendation not to proceed. Because the transaction is a stock purchase, every liability below stays with Target after closing, so each required specific treatment in the SPA rather than reliance on the general representations. The most significant exposure is the “natural” labeling matter, followed by FreshWay customer concentration.</p>
+<h2>II. Key findings and allocation</h2>
+<table>
+<thead><tr><th>Finding</th><th>Exposure</th><th>How the SPA allocated it</th></tr></thead>
+<tbody>
+<tr><td><b>“Natural” labeling:</b> threatened class action (Reyes &amp; Calloway) and New Hanover AG investigative demand</td><td>High. Class damages claimed above $75M; state penalties up to $10,000 per violation; reputational risk to Pubco brands.</td><td>Specific indemnity for Natural Labeling Matters, with no basket and 36-month survival, secured by a $35M special escrow. Pubco controls defense after closing. Pre-closing covenant gave Pubco consultation rights over the response to the investigative demand.</td></tr>
+<tr><td><b>Customer concentration:</b> FreshWay (30.4% of FY2024 revenue) may terminate for convenience on 90 days’ notice</td><td>High. Revenue at risk underlies the valuation.</td><td>Material-customers rep (no termination notice or material volume reduction). $120M holdback released at 12 months if FreshWay neither terminates nor cuts volume by more than 25%.</td></tr>
+<tr><td><b>HQ lease:</b> change of control is a deemed assignment; landlord recapture right</td><td>Medium. Default risk at Target’s headquarters.</td><td>On the consents schedule; landlord consent and recapture waiver made a closing condition. Obtained November 14, 2025.</td></tr>
+<tr><td><b>Highland Leaf supply:</b> supplier change-of-control termination right</td><td>Medium. About 40% of black tea supply.</td><td>On the consents schedule; pre-closing covenant to seek a waiver. Waiver delivered before closing.</td></tr>
+<tr><td><b>CEO agreement:</b> single-trigger change-of-control payment (about $4.75M), full vesting, excise tax gross-up</td><td>Medium. Known, quantifiable cost.</td><td>Scheduled; treated as a Transaction Expense and deducted from the price. Section 280G stockholder vote obtained before closing. New double-trigger retention agreement signed.</td></tr>
+<tr><td><b>Insurance program</b></td><td>None identified.</td><td>Standard insurance rep only. Target joins Pubco’s master program at the April 2026 renewal.</td></tr>
+</tbody></table>
+<h2>III. Public-company considerations</h2>
+<p>We briefed Pubco’s board on these findings before it approved the SPA, and the board minutes reflect that review, which supports the directors’ duty of care and business judgment rule protection. After closing, Pubco should evaluate the labeling matters for loss-contingency disclosure in its first periodic report, and plan the integration of Target, which has never been subject to SEC internal-control requirements, into Pubco’s internal control over financial reporting. Pubco’s communications team should have a holding statement ready on the labeling matter.</p>
+</article>
+<div class="nav"><button class="btn ghost" data-action="goto" data-stage="3">← Back to the data room</button><button class="btn ghost" data-action="reset">Restart exercise</button></div>`}
+
+/* ---------- Render & events ---------- */
+function render(){renderSteps();const m=$("#main");m.innerHTML=S.stage===1?stage1():S.stage===2?stage2():S.stage===3?stage3():stage4()}
+
+function submit(){
+  const d=docById(S.cur), r=S.reviews[d.id], err=$("#err");
+  if(!r.noIssue){
+    const miss=[];
+    if(r.para==null)miss.push("click the paragraph that raises the issue");
+    if(!r.category)miss.push("choose a category");
+    if(!r.materiality)miss.push("rate materiality");
+    if(!r.rep)miss.push("choose the representation");
+    if(!r.response)miss.push("choose a deal response");
+    if(!r.finding.trim())miss.push("write a finding");
+    if(miss.length){err.textContent="Before submitting, "+miss.join(", ")+".";return}
+    const sentences=(r.finding.trim().match(/[.!?](\s|$)/g)||[]).length;
+    if(sentences>2&&!err.dataset.warned){err.dataset.warned="1";err.textContent="Your finding runs past two sentences. Tighten it if you can, or click Submit again to keep it as is.";return}
+  }
+  r.submitted=true;save();render();
+  const c=document.querySelector(".aiwrap")||document.querySelector(".cmp");if(c)c.scrollIntoView({behavior:"smooth",block:"start"});
+  gradeDoc(d.id);
+}
+
+async function copyChart(){
+  const rows=[CHART_HEAD,...chartRows(S.chart)];
+  const tsv=rows.map(r=>r.map(c=>String(c).replace(/[\t\n]+/g," ")).join("\t")).join("\n");
+  const html=chartTable(S.chart).replace('<table class="chart">','<table border="1" cellpadding="4" style="border-collapse:collapse">');
+  const note=$("#copied");
+  try{
+    if(window.ClipboardItem&&navigator.clipboard&&navigator.clipboard.write){
+      await navigator.clipboard.write([new ClipboardItem({"text/plain":new Blob([tsv],{type:"text/plain"}),"text/html":new Blob([html],{type:"text/html"})})]);
+    }else{await navigator.clipboard.writeText(tsv)}
+    note.textContent="Copied. Paste into Word, Excel, or email.";
+  }catch(e){
+    try{const ta=document.createElement("textarea");ta.value=tsv;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();document.execCommand("copy");ta.remove();note.textContent="Copied as tab-separated text."}
+    catch(e2){note.textContent="Copy failed. Select the table and copy it manually."}
+  }
+  setTimeout(()=>{if(note)note.textContent=""},4000);
+}
+
+document.addEventListener("click",e=>{
+  const el=e.target.closest("[data-action]");if(!el)return;
+  const a=el.dataset.action;
+  if(a==="goto"){go(+el.dataset.stage)}
+  else if(a==="doc"){S.cur=el.dataset.id;if(S.stage!==3)S.stage=3;save();render();window.scrollTo(0,0)}
+  else if(a==="para"){const r=S.reviews[S.cur];if(r.submitted)return;const i=+el.dataset.i;r.para=r.para===i?null:i;if(r.para!=null)r.noIssue=false;save();render()}
+  else if(a==="submit"){submit()}
+  else if(a==="chart"){S.chart=el.dataset.v;save();render();document.querySelector(".chartbar").scrollIntoView({block:"start"})}
+  else if(a==="copy"){copyChart()}
+  else if(a==="aigrade"){gradeDoc(el.dataset.id)}
+  else if(a==="aireply"){const id=el.dataset.id,ta=document.getElementById("rep-"+id);if(ta)DRAFT[id]=ta.value;if((DRAFT[id]||"").trim())replyFollowup(id);else if(ta)ta.focus()}
+  else if(a==="aimemo"){draftMemo()}
+  else if(a==="aisettings"){const p=$("#aiset");p.hidden=!p.hidden;el.setAttribute("aria-expanded",String(!p.hidden));if(!p.hidden)$("#keyin").focus()}
+  else if(a==="setkey"){const v=$("#keyin").value.trim();$("#keyin").value="";if(v)userKey=v;keyStatus()}
+  else if(a==="clearkey"){userKey="";$("#keyin").value="";keyStatus()}
+  else if(a==="reset"){if(confirm("Restart the exercise? This clears all of your reviews.")){GEN++;Object.keys(DRAFT).forEach(k=>delete DRAFT[k]);S=fresh();try{localStorage.removeItem(KEY)}catch(x){}render();window.scrollTo(0,0)}}
+});
+document.addEventListener("change",e=>{
+  const t=e.target;
+  if(t.dataset.action==="noissue"){const r=S.reviews[S.cur];r.noIssue=t.checked;if(t.checked)r.para=null;save();render();return}
+  if(t.dataset.field){S.reviews[S.cur][t.dataset.field]=t.value;save()}
+});
+document.addEventListener("input",e=>{const t=e.target;if(t.dataset.reply){DRAFT[t.dataset.reply]=t.value;return}if(t.dataset.field==="finding"){S.reviews[S.cur].finding=t.value;save();const err=$("#err");if(err){err.textContent="";delete err.dataset.warned}}});
+document.addEventListener("keydown",e=>{const el=e.target.closest&&e.target.closest('[data-action="para"]');if(el&&(e.key==="Enter"||e.key===" ")){e.preventDefault();el.click()}});
+document.addEventListener("keydown",e=>{if(e.target.id==="keyin"&&e.key==="Enter"){e.preventDefault();document.querySelector('[data-action="setkey"]').click()}});
+function keyStatus(){const el=$("#keyst");if(userKey){el.className="keyst on";el.textContent="Key in use (memory only)"}else if(activeKey()){el.className="keyst on";el.textContent="Using the site’s built-in key"}else{el.className="keyst off";el.textContent="No key: AI features are off"}}
+
+keyStatus();
+render();
+</script>
+</body>
+</html>
